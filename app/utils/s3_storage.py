@@ -6,6 +6,7 @@ Handles file operations with proper error handling and logging.
 import boto3
 import logging
 import json
+from urllib.parse import urlparse
 from typing import Optional, Dict, Any
 from botocore.exceptions import ClientError
 from app.core.config import settings
@@ -147,6 +148,27 @@ class S3Storage:
         except ClientError as e:
             logger.error(f"Presigned URL generation failed: {e}")
             return None
+
+    @staticmethod
+    def parse_s3_url(s3_url: str) -> tuple:
+        """
+        Parse S3 URL into bucket and key.
+
+        Args:
+            s3_url: URL in format s3://bucket/key
+
+        Returns:
+            Tuple of (bucket, key)
+
+        Raises:
+            ValueError: If URL format is invalid
+        """
+        parsed = urlparse(s3_url)
+        if parsed.scheme != "s3":
+            raise ValueError(f"Invalid S3 URL scheme: {s3_url}")
+        bucket = parsed.netloc
+        key = parsed.path.lstrip("/")
+        return bucket, key
 
 
 # Global S3 storage instance
