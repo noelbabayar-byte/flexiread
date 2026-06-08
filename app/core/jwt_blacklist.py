@@ -54,5 +54,29 @@ class JWTBlacklist:
             logger.error("JWT blacklist check failed: %s", exc)
             return True
 
+    def blacklist_refresh_token(self, jti: str, exp: datetime) -> None:
+        """Explicitly add a refresh token's JTI to the blacklist upon logout or revocation."""
+        if not jti:
+            return
+        if exp.tzinfo is None:
+            exp = exp.replace(tzinfo=timezone.utc)
+        ttl = int((exp - datetime.now(timezone.utc)).total_seconds())
+        if ttl <= 0:
+            return
+        try:
+            self.redis.setex(f"{self.prefix}refresh_blacklist:{jti}", ttl, "1")
+        except Exception as exc:
+            logger.error("Failed to blacklist refresh JTI: %s", exc)
+            raise
+
+    def is_refresh_blacklisted(self, jti: str) -> bool:
+        if not jti:
+            return False
+        try:
+            return bool(self.redis.exists(f"{self.prefix}refresh_blacklist:{jti}"))
+        except Exception as exc:
+            logger.error("Refresh blacklist check failed: %s", exc)
+            return True
+
 
 jwt_blacklist = JWTBlacklist()

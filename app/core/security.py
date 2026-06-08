@@ -101,11 +101,12 @@ class SecurityManager:
         expire = datetime.now(timezone.utc) + timedelta(
             days=settings.JWT_REFRESH_EXPIRATION_DAYS
         )
+        jti = str(uuid.uuid4())
         to_encode.update(
             {
                 "exp": expire,
                 "iat": datetime.now(timezone.utc),
-                "jti": str(uuid.uuid4()),
+                "jti": jti,
                 "type": "refresh",
             }
         )
@@ -133,7 +134,13 @@ class SecurityManager:
             )
             jti = payload.get("jti")
             if jti:
-                if jwt_blacklist.is_blacklisted(jti):
+                token_type = payload.get("type", "access")
+                if token_type == "refresh":
+                    is_revoked = jwt_blacklist.is_refresh_blacklisted(jti)
+                else:
+                    is_revoked = jwt_blacklist.is_blacklisted(jti)
+
+                if is_revoked:
                     logger.warning("Token has been revoked: %s", jti)
                     return None
             return payload
