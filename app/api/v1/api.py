@@ -1,12 +1,9 @@
-"""
-API v1 router aggregation.
-"""
-
 from fastapi import APIRouter
-
 from app.api.v1.endpoints import auth, books, users
 
 api_router = APIRouter()
-api_router.include_router(auth.router)
-api_router.include_router(books.router)
-api_router.include_router(users.router)
+
+# Keep existing URL structure by not adding extra prefixes here
+api_router.include_router(auth.router, tags=["auth"])
+api_router.include_router(books.router, tags=["books"])
+api_router.include_router(users.router, tags=["users"])

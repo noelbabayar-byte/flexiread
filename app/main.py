@@ -6,7 +6,7 @@ Registers all routers and configures middleware.
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
-from app.api.v1.endpoints import auth, books, users
+from app.api.v1.api import api_router
 import logging
 
 # Configure logging
@@ -46,9 +46,7 @@ app.add_middleware(
 )
 
 # Register routers
-app.include_router(auth.router, prefix="/api/v1")
-app.include_router(books.router, prefix="/api/v1")
-app.include_router(users.router, prefix="/api/v1")
+app.include_router(api_router, prefix="/api/v1")
 
 
 @app.get("/health")
