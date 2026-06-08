@@ -7,6 +7,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.api.v1.api import api_router
+from app.core.database import init_db
 import logging
 
 # Configure logging
@@ -44,6 +45,12 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PUT", "DELETE"],
     allow_headers=["Authorization", "Content-Type", "X-Requested-With"],
 )
+
+# Secure database initialization during FastAPI startup event
+@app.on_event("startup")
+def startup_event():
+    init_db()
+
 
 # Register routers
 app.include_router(api_router, prefix="/api/v1")
