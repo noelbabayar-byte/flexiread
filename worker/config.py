@@ -26,4 +26,9 @@ WORKER_CONFIG = {
     "max_tasks_per_child": 1000,  # Restart worker after 1000 tasks
     "time_limit": 3600,  # Hard limit: 1 hour
     "soft_time_limit": 3300,  # Soft limit: 55 minutes
+    "task_routes": {
+        "process_pdf_task": {"queue": "pdf_processing"},
+        "cleanup_old_books": {"queue": "maintenance"},
+        "reset_monthly_quotas": {"queue": "maintenance"},
+    },
 }
