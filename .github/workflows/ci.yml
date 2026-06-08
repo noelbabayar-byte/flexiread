@@ -89,8 +89,22 @@ jobs:
       - name: Run Flake8
         run: flake8 app worker tests --max-line-length=100 --extend-ignore=E203,W503
 
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install security tools
+        run: pip install bandit pip-audit
+      - name: Run Bandit (Security Linter)
+        run: bandit -r app worker -ll
+      - name: Run pip-audit (Dependency Vulnerability Scan)
+        run: pip-audit -r requirements.txt
+
   build:
-    needs: [test, lint]
+    needs: [test, lint, security]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
