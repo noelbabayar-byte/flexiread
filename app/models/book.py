@@ -79,7 +79,7 @@ class Book(BaseModel):
     owner = relationship("User", back_populates="books")
 
     def __repr__(self) -> str:
-        return f"<Book(id={self.id}, title={self.title}, status={self.status.value})>"
+        return f"<Book(id={self.id}, title={self.title}, status={self.status.value}, user_id={self.user_id})>"
 
     def update_progress(self, processed_pages: int, total_pages: int) -> None:
         """

@@ -52,7 +52,7 @@ class User(BaseModel):
     books = relationship("Book", back_populates="owner", cascade="all, delete-orphan")
 
     def __repr__(self) -> str:
-        return f"<User(id={self.id}, email={self.email}, plan={self.plan_type.value})>"
+        return f"<User(id={self.id}, email={self.email}, plan={self.plan_type.value}, is_active={self.is_active})>"
 
     def has_quota(self, pages_needed: int = 1) -> bool:
         """
