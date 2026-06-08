@@ -8,7 +8,7 @@ import tempfile
 import logging
 import json
 from contextlib import contextmanager
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from sqlalchemy.orm import Session
 from app.core.celery_app import celery_app
 from app.core.database import SessionLocal
@@ -286,13 +286,15 @@ def cleanup_old_books():
 @celery_app.task(name="reset_monthly_quotas")
 def reset_monthly_quotas():
     """
-    Periodic task to reset monthly quotas for all users.
-    Should be scheduled to run on the 1st of each month.
+    Periodic task to reset monthly quotas for users whose reset date has arrived.
+    Uses a 'Due Date' pattern to handle short months and prevent double resets.
     """
     with get_task_db() as db:
         try:
-            users = db.query(User).all()
             now = datetime.now(timezone.utc)
+
+            # Filter users whose next quota reset date has arrived or passed
+            users = db.query(User).filter(User.ocr_quota_reset_date <= now).all()
 
             for user in users:
                 # Reset based on subscription tier
@@ -301,9 +303,8 @@ def reset_monthly_quotas():
                 else:
                     user.ocr_quota_remaining = settings.FREE_TIER_MONTHLY_QUOTA
 
-                user.ocr_quota_reset_date = datetime(
-                    now.year, now.month, 1, tzinfo=timezone.utc
-                )
+                # Advance the reset date safely by 30 days to schedule the next cycle
+                user.ocr_quota_reset_date = now + timedelta(days=30)
 
             db.commit()
             logger.info(f"Reset quotas for {len(users)} users")
