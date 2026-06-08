@@ -38,16 +38,24 @@ TestingSessionLocal = sessionmaker(
 )
 
 
+@pytest.fixture(scope="session", autouse=True)
+def setup_database():
+    Base.metadata.create_all(bind=engine)
+    yield
+    Base.metadata.drop_all(bind=engine)
+
+
 @pytest.fixture(scope="function")
 def db():
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-    session = TestingSessionLocal()
+    connection = engine.connect()
+    transaction = connection.begin()
+    session = TestingSessionLocal(bind=connection)
     try:
         yield session
     finally:
+        transaction.rollback()
         session.close()
-        Base.metadata.drop_all(bind=engine)
+        connection.close()
 
 
 @pytest.fixture
