@@ -11,7 +11,7 @@ services:
       POSTGRES_DB: ${DB_NAME:-flexiread}
       POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=en_US.UTF-8"
     ports:
-      - "5432:5432"
+      - "${DB_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -34,7 +34,7 @@ services:
     container_name: flexiread-redis
     command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-flexiread_redis_dev}
     ports:
-      - "6379:6379"
+      - "${REDIS_PORT:-6379}:6379"
     volumes:
       - redis_data:/data
     networks:
@@ -60,14 +60,14 @@ services:
       MINIO_ROOT_USER: ${AWS_ACCESS_KEY_ID:-minioadmin}
       MINIO_ROOT_PASSWORD: ${AWS_SECRET_ACCESS_KEY:-minioadmin}
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "${MINIO_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
     volumes:
       - minio_data:/data
     networks:
       - flexiread-network
     healthcheck:
-      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:9000/minio/health/live')"]
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:9000/minio/health/live || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -123,7 +123,7 @@ services:
       LOG_LEVEL: INFO
       ALLOWED_ORIGINS: http://localhost,http://localhost:5173
     ports:
-      - "8000:8000"
+      - "${API_PORT:-8000}:8000"
     networks:
       - flexiread-network
     depends_on:
@@ -182,7 +182,7 @@ services:
       target: production
     container_name: flexiread-frontend
     ports:
-      - "80:80"
+      - "${FRONTEND_PORT:-80}:80"
     networks:
       - flexiread-network
     depends_on:
